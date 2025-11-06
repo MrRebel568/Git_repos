@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Compare — Git Repos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar mb-4">
+    <div class="container-fluid">
+      <a href="index.html" class="navbar-brand">← Git Repos</a>
+      <span class="text-muted">Compare Users</span>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h3 class="text-center mb-3">Compare up to 4 GitHub users</h3>
+
+    <div class="row mb-3">
+      <div class="col-md-3"><input id="c0" class="form-control" placeholder="username 1"></div>
+      <div class="col-md-3"><input id="c1" class="form-control" placeholder="username 2"></div>
+      <div class="col-md-3"><input id="c2" class="form-control" placeholder="username 3 (optional)"></div>
+      <div class="col-md-3"><input id="c3" class="form-control" placeholder="username 4 (optional)"></div>
+    </div>
+
+    <div class="text-center mb-3">
+      <button id="compareBtn" class="btn btn-primary">Compare</button>
+    </div>
+
+    <div id="compareResult"></div>
+
+    <div class="mt-4">
+      <h5 class="text-center">Language Comparison</h5>
+      <canvas id="compareLangChart"></canvas>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="chart.js"></script>
+  <script type="module">
+    import { renderDoughnut } from './chart.js';
+
+    const compareBtn = document.getElementById('compareBtn');
+    const compareResult = document.getElementById('compareResult');
+    const langCanvas = document.getElementById('compareLangChart');
+
+    compareBtn.addEventListener('click', async () => {
+      const usernames = [0,1,2,3].map(i => document.getElementById('c'+i).value.trim()).filter(Boolean);
+      if (!usernames.length) return alert('Enter at least one username to compare.');
+      compareResult.innerHTML = '<div class="text-center my-3">Loading...</div>';
+
+      try {
+        const promises = usernames.map(u => fetch(`https://api.github.com/users/${u}`).then(r => r.ok? r.json(): Promise.reject(new Error('User '+u+' not found'))));
+        const users = await Promise.all(promises);
+
+        // Show summary cards
+        compareResult.innerHTML = '<div class="row">';
+        const langMerged = {}; // accumulate languages for combined chart
+        await Promise.all(users.map(async (u, idx) => {
+          const repos = await fetch(`https://api.github.com/users/${u.login}/repos?per_page=100`).then(r => r.json());
+          const totalStars = repos.reduce((a,b)=>a+(b.stargazers_count||0),0);
+          const langCounts = {};
+          repos.forEach(r => { if (r.language) langCounts[r.language] = (langCounts[r.language]||0)+1; });
+          Object.entries(langCounts).forEach(([lang,c]) => { langMerged[lang] = (langMerged[lang]||0)+c; });
+
+          compareResult.innerHTML += `
+            <div class="col-md-3 mb-3">
+              <div class="card p-3 h-100 text-center">
+                <img src="${u.avatar_url}" alt="${u.login}" class="rounded-circle mb-2" width="80">
+                <h5>${u.name || u.login}</h5>
+                <p class="mb-1 small text-muted">${u.login}</p>
+                <p class="mb-1">Repos: <strong>${u.public_repos}</strong></p>
+                <p class="mb-1">Followers: <strong>${u.followers}</strong></p>
+                <p class="mb-1">Total stars: <strong>${totalStars}</strong></p>
+                <a href="${u.html_url}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View</a>
+              </div>
+            </div>`;
+        }));
+        compareResult.innerHTML += '</div>';
+
+        // draw merged language doughnut
+        renderDoughnut(langCanvas, langMerged, {title: 'Combined language counts across selected users'});
+
+      } catch (err) {
+        compareResult.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

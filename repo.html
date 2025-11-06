@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Repo — Git Repos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar mb-4">
+    <div class="container-fluid">
+      <a href="index.html" class="navbar-brand">← Git Repos</a>
+      <span id="repoNavText" class="text-muted"></span>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="repoHeader" class="text-center mb-3"></div>
+    <div id="repoBody">
+      <div id="commitChartContainer" class="mb-4">
+        <h5 class="text-center">Commits Over Time</h5>
+        <canvas id="commitChart" height="120"></canvas>
+      </div>
+      <div id="contributorsContainer" class="mb-4">
+        <h5 class="text-center">Top Contributors</h5>
+        <div id="contributorsList" class="row"></div>
+      </div>
+      <div id="readmeContainer" class="mb-4">
+        <h5 class="text-center">README (rendered)</h5>
+        <div id="readme" class="card p-3"></div>
+      </div>
+    </div>
+    <div id="repoError"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="chart.js"></script>
+  <script type="module">
+    import { renderLine } from './chart.js';
+
+    const params = new URLSearchParams(location.search);
+    const user = params.get('user');
+    const repo = params.get('repo');
+    const repoHeader = document.getElementById('repoHeader');
+    const repoNavText = document.getElementById('repoNavText');
+    const repoError = document.getElementById('repoError');
+
+    if (!user || !repo) {
+      repoError.innerHTML = '<div class="alert alert-warning">Missing user or repo query params. Use ?user=USERNAME&repo=REPO_NAME</div>';
+      throw new Error('Missing params');
+    }
+    repoNavText.textContent = `${user}/${repo}`;
+
+    async function fetchWithAuth(url) {
+      const token = localStorage.getItem('GITREPOS_GHTOKEN') || '';
+      const headers = token ? { Authorization: 'token ' + token } : {};
+      const r = await fetch(url, { headers });
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return r.json();
+    }
+
+    (async function loadRepo() {
+      try {
+        const repoData = await fetchWithAuth(`https://api.github.com/repos/${user}/${repo}`);
+        repoHeader.innerHTML = `
+          <h3>${repoData.full_name}</h3>
+          <p class="text-muted">${repoData.description || 'No description'}</p>
+          <p>⭐ ${repoData.stargazers_count} • Forks: ${repoData.forks_count} • Language: ${repoData.language || 'N/A'}</p>
+        `;
+
+        // commits: fetch last 6 months of commits (per week)
+        const commits = await fetchWithAuth(`https://api.github.com/repos/${user}/${repo}/commits?per_page=100`);
+        // Aggregate commits by date (by day, then compress by weeks)
+        const daily = {};
+        commits.forEach(c => {
+          const date = new Date(c.commit.author.date).toISOString().slice(0,10);
+          daily[date] = (daily[date]||0) + 1;
+        });
+
+        // build date range for last 90 days
+        const days = 90;
+        const labels = [];
+        const values = [];
+        for (let i = days-1; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0,10);
+          labels.push(key);
+          values.push(daily[key] || 0);
+        }
+        renderLine(document.getElementById('commitChart'), labels, values, { title: 'Commits last 90 days' });
+
+        // contributors
+        const contributors = await fetchWithAuth(`https://api.github.com/repos/${user}/${repo}/contributors?per_page=10`);
+        const contributorsList = document.getElementById('contributorsList');
+        contributorsList.innerHTML = contributors.map(c => `
+          <div class="col-md-4 mb-2">
+            <div class="card p-2 text-center">
+              <img src="${c.avatar_url}" width="60" class="rounded-circle mb-2">
+              <div><strong>${c.login}</strong></div>
+              <div class="small text-muted">Contributions: ${c.contributions}</div>
+              <a href="${c.html_url}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View</a>
+            </div>
+          </div>
+        `).join('');
+
+        // README
+        try {
+          const readmeRes = await fetchWithAuth(`https://api.github.com/repos/${user}/${repo}/readme`);
+          const readmeText = atob(readmeRes.content.replace(/\n/g,''));
+          document.getElementById('readme').innerHTML = marked.parse(readmeText || 'No README');
+        } catch (err) {
+          document.getElementById('readme').innerHTML = '<div class="text-muted small">README not available or could not be fetched.</div>';
+        }
+
+      } catch (err) {
+        repoError.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

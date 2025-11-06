@@ -1,0 +1,242 @@
+:root {
+  --bg: #f5f7fa;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --text: #1e2329;
+  --muted: #6b7280;
+  --accent: #4e9cff;
+  --accent-glow: rgba(78, 156, 255, 0.4);
+  --success: #28a745;
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --border: 1px solid rgba(0, 0, 0, 0.05);
+  --blur: 10px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0f14;
+  --card-bg: rgba(17, 23, 31, 0.9);
+  --text: #e5e9ef;
+  --muted: #a0a7b3;
+  --accent: #58a6ff;
+  --accent-glow: rgba(88, 166, 255, 0.4);
+  --success: #2ea44f;
+  --shadow: 0 6px 22px rgba(0, 0, 0, 0.6);
+  --border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  transition: background 0.25s ease, color 0.25s ease, border 0.25s ease;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  background: linear-gradient(135deg, var(--bg) 0%, #e9ecef 100%);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────── NAVBAR ─────────────── */
+.navbar {
+  background: linear-gradient(90deg, #0d1117, #141b23);
+  padding: 0.9rem 1.4rem;
+  color: #fff;
+  box-shadow: var(--shadow);
+  border-bottom: var(--border);
+  backdrop-filter: blur(var(--blur));
+}
+.navbar .navbar-brand {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+}
+.navbar .navbar-brand:hover {
+  color: #fff;
+}
+.navbar .btn-toggle {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.navbar .btn-toggle:hover {
+  transform: rotate(15deg);
+}
+
+/* ─────────────── INPUTS & CONTROLS ─────────────── */
+input.form-control,
+select.form-select {
+  border-radius: 10px;
+  border: var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* ─────────────── USER INFO CARD ─────────────── */
+#userInfo {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--blur));
+  border: var(--border);
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  justify-content: flex-start;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+#userInfo:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.15);
+}
+#userInfo img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+#userInfo h4 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+/* ─────────────── REPO CARDS ─────────────── */
+.repo-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+  border: var(--border);
+  backdrop-filter: blur(var(--blur));
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.repo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+}
+.repo-card h5 {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  color: var(--accent);
+}
+.repo-card p {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* ─────────────── BADGES & BUTTONS ─────────────── */
+.badge {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.btn-primary {
+  background: var(--accent);
+  border: none;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+.btn-primary:hover {
+  background: #3b89ff;
+  transform: translateY(-2px);
+}
+.btn-outline-secondary {
+  border-color: var(--muted);
+  color: var(--muted);
+}
+.btn-outline-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ─────────────── LANGUAGE CHART ─────────────── */
+#languageChart {
+  max-width: 760px;
+  margin: 20px auto;
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: var(--border);
+  backdrop-filter: blur(var(--blur));
+  animation: fadeIn 0.6s ease;
+}
+
+/* ─────────────── COMPARE & REPO PAGE CARDS ─────────────── */
+.card {
+  border-radius: var(--radius);
+  border: var(--border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--blur));
+  transition: transform 0.25s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ─────────────── HELPERS ─────────────── */
+.text-muted { color: var(--muted) !important; }
+.shadow-sm { box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+.glow {
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ─────────────── ANIMATIONS ─────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────── RESPONSIVE ─────────────── */
+@media (max-width: 768px) {
+  #userInfo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .navbar {
+    padding: 0.6rem;
+  }
+  #languageChart {
+    width: 95%;
+  }
+}
+
+/* ─────────────── FOOTER ─────────────── */
+footer {
+  background: var(--card-bg);
+  border-top: var(--border);
+  margin-top: 3rem;
+  backdrop-filter: blur(var(--blur));
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+footer strong {
+  color: var(--accent);
+}
